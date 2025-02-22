@@ -1,0 +1,153 @@
+n <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Weather App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            animation: slideUp 1s ease-in-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .day {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, background 0.3s, color 0.3s;
+        }
+
+        .day:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.7);
+            color: #ff758c;
+        }
+
+        .city {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+
+        input:focus {
+            background: aqua;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            background: #ff758c;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background: aqua;
+            color: black;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Real-Time Weather App</h1>
+    <div class="container">
+        <input type="text" id="city-input" placeholder="Enter city name" value="London">
+        <button onclick="fetchWeather()">Get Weather</button>
+        <div class="city" id="city-name">Loading...</div>
+        <div id="current-weather">Loading...</div>
+        <div id="weather-container">Loading...</div>
+    </div>
+
+    <script>
+        const apiKey = "8194f0f065694e969d8173226252002";
+
+        function fetchWeather() {
+            const city = document.getElementById("city-input").value;
+            if (!city) {
+                alert("Please enter a city name.");
+                return;
+            }
+            
+            const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes&alerts=yes`;
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById("city-name").innerText = `Weather in ${data.location.name}, ${data.location.country}`;
+                    const currentWeather = document.getElementById("current-weather");
+                    currentWeather.innerHTML = `
+                        <p>Temperature: ${data.current.temp_c}°C / ${data.current.temp_f}°F</p>
+                        <p>Condition: ${data.current.condition.text}</p>
+                        <img src="${data.current.condition.icon}" alt="Weather Icon">
+                    `;
+
+                    const container = document.getElementById("weather-container");
+                    container.innerHTML = "";
+
+                    data.forecast.forecastday.forEach(day => {
+                        const dayElement = document.createElement("div");
+                        dayElement.classList.add("day");
+                        dayElement.innerHTML = `
+                            <h3>${day.date}</h3>
+                            <p>Condition: ${day.day.condition.text}</p>
+                            <p>Max Temp: ${day.day.maxtemp_c}°C / ${day.day.maxtemp_f}°F</p>
+                            <p>Min Temp: ${day.day.mintemp_c}°C / ${day.day.mintemp_f}°F</p>
+                            <img src="${day.day.condition.icon}" alt="Weather Icon">
+                        `;
+                        container.appendChild(dayElement);
+                    });
+                })
+                .catch(error => {
+                    document.getElementById("city-name").innerText = "Failed to load weather data.";
+                    document.getElementById("current-weather").innerHTML = "";
+                    document.getElementById("weather-container").innerHTML = "";
+                    console.error("Error fetching weather data:", error);
+                });
+        }
+
+        fetchWeather();
+    </script>
+</body>
+</html>
